@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ASG4 – Phong Lighting</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #1a1a2e; color: #eee; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; }
+    h1 { margin: 8px 0 4px; font-size: 1.2em; color: #90caf9; }
+    #webgl { display: block; border: 2px solid #444; }
+    #controls {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      padding: 8px; max-width: 900px; width: 100%;
+    }
+    .ctrl-group {
+      background: #16213e; border: 1px solid #333; border-radius: 6px;
+      padding: 8px 12px; min-width: 200px;
+    }
+    .ctrl-group h3 { font-size: 0.75em; color: #90caf9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+    label { font-size: 0.78em; display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+    input[type=range] { flex: 1; accent-color: #90caf9; }
+    button {
+      font-size: 0.78em; padding: 4px 10px; border: 1px solid #555;
+      border-radius: 4px; cursor: pointer; background: #0f3460; color: #eee;
+    }
+    button.active { background: #e94560; border-color: #e94560; }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    #status { font-size: 0.72em; color: #aaa; padding: 2px 8px; }
+    span.val { min-width: 30px; text-align: right; font-size: 0.85em; color: #ffd54f; }
+  </style>
+</head>
+<body>
+<h1>CSE160 Assignment 4 – Phong Lighting</h1>
+<canvas id="webgl" width="900" height="500"></canvas>
+<div id="status">WASD = move | QE = pan left/right | Arrow Left/Right = pan | Arrow Up/Down = move up/down</div>
+
+<div id="controls">
+
+  <!-- Camera -->
+  <div class="ctrl-group">
+    <h3>Camera</h3>
+    <label>FOV
+      <input type="range" id="sl-fov" min="30" max="120" value="60">
+      <span class="val" id="fov-val">60</span>
+    </label>
+  </div>
+
+  <!-- Point Light -->
+  <div class="ctrl-group">
+    <h3>Point Light</h3>
+    <label>X
+      <input type="range" id="sl-lx" min="-20" max="36" step="0.5" value="8">
+      <span class="val" id="lx-val">8</span>
+    </label>
+    <label>Y
+      <input type="range" id="sl-ly" min="1" max="20" step="0.5" value="10">
+      <span class="val" id="ly-val">10</span>
+    </label>
+    <label>Z
+      <input type="range" id="sl-lz" min="-20" max="36" step="0.5" value="8">
+      <span class="val" id="lz-val">8</span>
+    </label>
+    <label>R <input type="range" id="sl-lr" min="0" max="1" step="0.01" value="1"><span class="val" id="lr-val">1.0</span></label>
+    <label>G <input type="range" id="sl-lg" min="0" max="1" step="0.01" value="1"><span class="val" id="lg-val">1.0</span></label>
+    <label>B <input type="range" id="sl-lb" min="0" max="1" step="0.01" value="1"><span class="val" id="lb-val">1.0</span></label>
+  </div>
+
+  <!-- Spotlight -->
+  <div class="ctrl-group">
+    <h3>Spotlight</h3>
+    <label>PosX
+      <input type="range" id="sl-spx" min="0" max="32" step="0.5" value="16">
+      <span class="val" id="spx-val">16</span>
+    </label>
+    <label>PosY
+      <input type="range" id="sl-spy" min="2" max="30" step="0.5" value="14">
+      <span class="val" id="spy-val">14</span>
+    </label>
+    <label>PosZ
+      <input type="range" id="sl-spz" min="0" max="32" step="0.5" value="16">
+      <span class="val" id="spz-val">16</span>
+    </label>
+    <label>Cutoff°
+      <input type="range" id="sl-spot" min="5" max="60" value="20">
+      <span class="val" id="spot-val">20</span>
+    </label>
+    <label>DirX
+      <input type="range" id="sl-sdx" min="-1" max="1" step="0.05" value="0">
+      <span class="val" id="sdx-val">0</span>
+    </label>
+    <label>DirY
+      <input type="range" id="sl-sdy" min="-1" max="1" step="0.05" value="-1">
+      <span class="val" id="sdy-val">-1</span>
+    </label>
+    <label>DirZ
+      <input type="range" id="sl-sdz" min="-1" max="1" step="0.05" value="0">
+      <span class="val" id="sdz-val">0</span>
+    </label>
+  </div>
+
+  <!-- Toggles -->
+  <div class="ctrl-group">
+    <h3>Toggles</h3>
+    <div class="btn-row">
+      <button id="btn-lighting" class="active" onclick="toggleLighting()">Lighting ON</button>
+      <button id="btn-normals" onclick="toggleNormals()">Normals OFF</button>
+    </div>
+    <div class="btn-row" style="margin-top:6px">
+      <button id="btn-point" class="active" onclick="togglePointLight()">Point Light ON</button>
+      <button id="btn-spot" class="active" onclick="toggleSpotLight()">Spot Light ON</button>
+    </div>
+    <div class="btn-row" style="margin-top:6px">
+      <button id="btn-anim" class="active" onclick="toggleAnim()">Animate ON</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="cuon-matrix-cse160.js"></script>
+<script src="webgl-utils.js"></script>
+<script src="webgl-debug.js"></script>
+<script src="cuon-utils.js"></script>
+<script src="geometry.js"></script>
+<script src="triangle.js"></script>
+<script src="square.js"></script>
+<script src="cube.js"></script>
+<script src="sphere.js"></script>
+<script src="model.js"></script>
+<script src="teapot.js"></script>
+<script src="teacup.js"></script>
+<script src="donut.js"></script>
+<script src="texture.js"></script>
+<script src="camera.js"></script>
+<script src="asg4.js"></script>
+</body>
+</html>
